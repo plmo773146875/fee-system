@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة الرسوم - كلية رواد النهضة</title>
+    <!-- ربط ملف الـ Manifest لتفعيل خاصية PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0d1b2a">
+    <style>
+        body {
+            font-family: Tahoma, Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+            direction: rtl;
+            text-align: right;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #0d1b2a;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #0d1b2a;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #1b263b;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>نظام إدارة الرسوم - كلية رواد النهضة</h2>
+        <div class="form-group">
+            <label for="studentName">اسم الطالب:</label>
+            <input type="text" id="studentName" placeholder="أدخل اسم الطالب الكامل">
+        </div>
+        <div class="form-group">
+            <label for="feeAmount">المبلغ المدفوع:</label>
+            <input type="number" id="feeAmount" placeholder="أدخل المبلغ">
+        </div>
+        <button onclick="saveData()">حفظ البيانات</button>
+    </div>
+
+    <script>
+        function saveData() {
+            const name = document.getElementById('studentName').value;
+            const amount = document.getElementById('feeAmount').value;
+            if(name && amount) {
+                alert('تم حفظ بيانات الطالب: ' + name + ' بمبلغ: ' + amount);
+            } else {
+                alert('الرجاء إدخال كافة البيانات بشكل صحيح.');
+            }
+        }
+    </script>
+</body>
+</html>
