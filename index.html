@@ -4,83 +4,176 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام إدارة الرسوم - كلية رواد النهضة</title>
-    <!-- ربط ملف الـ Manifest لتفعيل خاصية PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0d1b2a">
+    <!-- مكتبة Supabase للاتصال السحابي -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body {
-            font-family: Tahoma, Arial, sans-serif;
-            background-color: #f4f6f9;
-            margin: 0;
-            padding: 20px;
-            direction: rtl;
-            text-align: right;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        h2 {
-            color: #0d1b2a;
-            text-align: center;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        input, select {
-            width: 100%;
-            padding: 10px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            background-color: #0d1b2a;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #1b263b;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Tahoma, Arial, sans-serif; }
+        body { background-color: #f4f6f9; padding: 20px; direction: rtl; text-align: right; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h2 { color: #0d1b2a; text-align: center; margin-bottom: 20px; }
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .nav-btn { flex: 1; padding: 10px; border: none; background: #e2e8f0; color: #334155; font-weight: bold; border-radius: 6px; cursor: pointer; }
+        .nav-btn.active { background: #0d1b2a; color: white; }
+        .section { display: none; }
+        .section.active { display: block; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #334155; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; outline: none; }
+        input:focus { border-color: #0d1b2a; }
+        button.action-btn { background-color: #0d1b2a; color: white; padding: 12px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; margin-top: 5px; }
+        button.action-btn:hover { background-color: #1b263b; }
+        .record-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .delete-btn { background: #ef4444; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .pin-box { text-align: center; padding: 20px 0; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>نظام إدارة الرسوم - كلية رواد النهضة</h2>
-        <div class="form-group">
-            <label for="studentName">اسم الطالب:</label>
-            <input type="text" id="studentName" placeholder="أدخل اسم الطالب الكامل">
+        <h2>نظام إدارة الرسوم<br><span style="font-size: 14px; color: #64748b;">كلية رواد النهضة</span></h2>
+
+        <div class="nav-tabs">
+            <button class="nav-btn active" onclick="switchTab('form')">إدخال رسوم</button>
+            <button class="nav-btn" onclick="switchTab('admin')">سجلات الإدارة</button>
         </div>
-        <div class="form-group">
-            <label for="feeAmount">المبلغ المدفوع:</label>
-            <input type="number" id="feeAmount" placeholder="أدخل المبلغ">
+
+        <!-- قسم الإدخال -->
+        <div id="form-section" class="section active">
+            <div class="form-group">
+                <label for="studentName">اسم الطالب:</label>
+                <input type="text" id="studentName" placeholder="أدخل اسم الطالب الكامل">
+            </div>
+            <div class="form-group">
+                <label for="feeAmount">المبلغ المدفوع:</label>
+                <input type="number" id="feeAmount" placeholder="أدخل المبلغ">
+            </div>
+            <button class="action-btn" onclick="saveData()">حفظ البيانات سحابياً</button>
         </div>
-        <button onclick="saveData()">حفظ البيانات</button>
+
+        <!-- قسم الإدارة المحمي بررمز -->
+        <div id="admin-section" class="section">
+            <div id="pin-screen" class="pin-box">
+                <p style="margin-bottom: 10px; font-weight: bold;">أدخل رمز حماية الإدارة:</p>
+                <input type="password" id="pinInput" placeholder="أدخل الرمز (مثال: 1234)" style="text-align: center; margin-bottom: 10px;">
+                <button class="action-btn" onclick="verifyPin()">دخول للإدارة</button>
+            </div>
+
+            <div id="records-screen" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="font-size: 16px; color: #0d1b2a;">سجلات الطلاب السحابية</h3>
+                    <button onclick="lockAdmin()" style="background: #64748b; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">قفل</button>
+                </div>
+                <div id="recordsList">جاري التحميل...</div>
+            </div>
+        </div>
     </div>
 
     <script>
-        function saveData() {
-            const name = document.getElementById('studentName').value;
-            const amount = document.getElementById('feeAmount').value;
-            if(name && amount) {
-                alert('تم حفظ بيانات الطالب: ' + name + ' بمبلغ: ' + amount);
+        // إعدادات اتصال Supabase الخاصة بك (ضع رابطك والمفتاح هنا)
+        const SUPABASE_URL = 'ضع_رابط_Supabase_هنا';
+        const SUPABASE_ANON_KEY = 'ضع_مفتاح_Anon_هنا';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        const ADMIN_PIN = "1234"; // رمز الإدارة
+
+        function switchTab(tab) {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            if(tab === 'form') {
+                document.querySelectorAll('.nav-btn')[0].classList.add('active');
+                document.getElementById('form-section').classList.add('active');
             } else {
-                alert('الرجاء إدخال كافة البيانات بشكل صحيح.');
+                document.querySelectorAll('.nav-btn')[1].classList.add('active');
+                document.getElementById('admin-section').classList.add('active');
+            }
+        }
+
+        async function saveData() {
+            const name = document.getElementById('studentName').value.trim();
+            const amount = parseFloat(document.getElementById('feeAmount').value);
+
+            if(!name || isNaN(amount)) {
+                alert('الرجاء إدخال اسم الطالب والمبلغ بشكل صحيح.');
+                return;
+            }
+
+            const { error } = await supabaseClient
+                .from('student_fees')
+                .insert([{ student_name: name, fee_amount: amount }]);
+
+            if (error) {
+                alert('حدث خطأ أثناء الحفظ: ' + error.message);
+            } else {
+                alert('تم حفظ بيانات الطالب: ' + name + ' بنجاح!');
+                document.getElementById('studentName').value = '';
+                document.getElementById('feeAmount').value = '';
+            }
+        }
+
+        function verifyPin() {
+            const pin = document.getElementById('pinInput').value;
+            if(pin === ADMIN_PIN) {
+                document.getElementById('pin-screen').style.display = 'none';
+                document.getElementById('records-screen').style.display = 'block';
+                document.getElementById('pinInput').value = '';
+                fetchRecords();
+            } else {
+                alert('رمز الحماية غير صحيح!');
+            }
+        }
+
+        function lockAdmin() {
+            document.getElementById('pin-screen').style.display = 'block';
+            document.getElementById('records-screen').style.display = 'none';
+        }
+
+        async function fetchRecords() {
+            const listDiv = document.getElementById('recordsList');
+            listDiv.innerHTML = 'جاري الجلب...';
+
+            const { data, error } = await supabaseClient
+                .from('student_fees')
+                .select('*')
+                .order('id', { ascending: false });
+
+            if (error) {
+                listDiv.innerHTML = 'فشل تحميل السجلات: ' + error.message;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                listDiv.innerHTML = '<p style="text-align: center; color: #64748b;">لا توجد سجلات محفوظة حتى الآن.</p>';
+                return;
+            }
+
+            listDiv.innerHTML = '';
+            data.forEach(record => {
+                listDiv.innerHTML += `
+                    <div class="record-card">
+                        <div>
+                            <strong>${record.student_name}</strong>
+                            <div style="font-size: 14px; color: #64748b;">المبلغ: ${record.fee_amount}</div>
+                        </div>
+                        <button class="delete-btn" onclick="deleteRecord(${record.id})">حذف</button>
+                    </div>
+                `;
+            });
+        }
+
+        async function deleteRecord(id) {
+            if(!confirm('هل أنت متأكد من حذف هذا السجل؟')) return;
+
+            const { error } = await supabaseClient
+                .from('student_fees')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                alert('فشل الحذف: ' + error.message);
+            } else {
+                fetchRecords();
             }
         }
     </script>
